@@ -134,5 +134,5 @@ def get_ripple_set(args, kg, user_history_dict):
                 memories_r = [memories_r[i] for i in indices]
                 memories_t = [memories_t[i] for i in indices]
                 ripple_set[user].append([memories_h, memories_r, memories_t])
-
+        print(user, len(ripple_set[user]), end='\r')
     return ripple_set

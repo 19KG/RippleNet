@@ -24,7 +24,7 @@ def train(args, data_info, show_loss):
                     sess, get_feed_dict(args, model, train_data, ripple_set, start, start + args.batch_size))
                 start += args.batch_size
                 if show_loss:
-                    print('%.1f%% %.4f' % (start / train_data.shape[0] * 100, loss))
+                    print('%.1f%% %.4f' % (start / train_data.shape[0] * 100, loss), end='\r')
 
             # evaluation
             train_auc, train_acc = evaluation(sess, args, model, train_data, ripple_set, args.batch_size)

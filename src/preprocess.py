@@ -1,9 +1,9 @@
 import argparse
 import numpy as np
 
-RATING_FILE_NAME = dict({'movie': 'ratings.dat', 'book': 'BX-Book-Ratings.csv', 'news': 'ratings.txt'})
-SEP = dict({'movie': '::', 'book': ';', 'news': '\t'})
-THRESHOLD = dict({'movie': 4, 'book': 0, 'news': 0})
+RATING_FILE_NAME = dict({'movie': 'ratings.dat', 'book': 'BX-Book-Ratings.csv', 'news': 'ratings.txt', 'recommend': 'ratings.dat'})
+SEP = dict({'movie': '::', 'book': ';', 'news': '\t', 'recommend': '::'})
+THRESHOLD = dict({'movie': 4, 'book': 0, 'news': 0, 'recommend': 4})
 
 
 def read_item_index_to_entity_id_file():
@@ -81,8 +81,9 @@ def convert_kg():
 
     files = []
     if DATASET == 'movie':
-        files.append(open('../data/' + DATASET + '/kg_part1.txt', encoding='utf-8'))
-        files.append(open('../data/' + DATASET + '/kg_part2.txt', encoding='utf-8'))
+        # files.append(open('../data/' + DATASET + '/kg_part1.txt', encoding='utf-8'))
+        # files.append(open('../data/' + DATASET + '/kg_part2.txt', encoding='utf-8'))
+        files.append(open('../data/' + DATASET + '/kg.txt', encoding='utf-8'))
     else:
         files.append(open('../data/' + DATASET + '/kg.txt', encoding='utf-8'))
 
