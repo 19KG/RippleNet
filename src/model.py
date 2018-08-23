@@ -27,6 +27,7 @@ class RippleNet(object):
     def _build_inputs(self):
         self.items = tf.placeholder(dtype=tf.int32, shape=[None], name="items")
         self.labels = tf.placeholder(dtype=tf.float64, shape=[None], name="labels")
+        self.users = tf.placeholder(dtype=tf.int32, shape=[None], name='users')
         self.memories_h = []
         self.memories_r = []
         self.memories_t = []
@@ -165,3 +166,6 @@ class RippleNet(object):
         predictions = [1 if i >= 0.5 else 0 for i in scores]
         acc = np.mean(np.equal(predictions, labels))
         return auc, acc
+
+    def test(self, sess, feed_dict):
+        return sess.run([self.users, self.items, self.scores_normalized], feed_dict)

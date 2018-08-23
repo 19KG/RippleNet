@@ -10,7 +10,7 @@ def load_data(args):
 
 
 def load_rating(args):
-    print('reading rating file ...')
+    print('Reading rating file...')
 
     # reading rating file
     rating_file = '../data/' + args.dataset + '/ratings_final'
@@ -20,28 +20,38 @@ def load_rating(args):
         rating_np = np.loadtxt(rating_file + '.txt', dtype=np.int32)
         np.save(rating_file + '.npy', rating_np)
 
+    # reading test file
+    test_file = '../data/' + args.dataset + '/test_final'
+    if os.path.exists(test_file + '.npy'):
+        test_np = np.load(test_file + '.npy')
+    else:
+        test_np = np.loadtxt(test_file + '.txt', dtype=np.int32)
+        np.save(test_file + '.npy', test_np)
+
     # n_user = len(set(rating_np[:, 0]))
     # n_item = len(set(rating_np[:, 1]))
-    return dataset_split(rating_np)
+    return dataset_split(rating_np, test_np)
 
 
-def dataset_split(rating_np):
-    print('splitting dataset ...')
+def dataset_split(rating_np, test_np):
+    print('Loading train data...')
 
-    # train:eval:test = 6:2:2
-    eval_ratio = 0.2
-    test_ratio = 0.2
-    n_ratings = rating_np.shape[0]
+    # print('Splitting dataset...')
 
-    eval_indices = np.random.choice(list(range(n_ratings)), size=int(n_ratings * eval_ratio), replace=False)
-    left = set(range(n_ratings)) - set(eval_indices)
-    test_indices = np.random.choice(list(left), size=int(n_ratings * test_ratio), replace=False)
-    train_indices = list(left - set(test_indices))
-    # print(len(train_indices), len(eval_indices), len(test_indices))
+    # # train:eval:test = 6:2:2
+    # eval_ratio = 0.2
+    # test_ratio = 0.2
+    # n_ratings = rating_np.shape[0]
+    #
+    # eval_indices = np.random.choice(list(range(n_ratings)), size=int(n_ratings * eval_ratio), replace=False)
+    # left = set(range(n_ratings)) - set(eval_indices)
+    # test_indices = np.random.choice(list(left), size=int(n_ratings * test_ratio), replace=False)
+    # train_indices = list(left - set(test_indices))
+    # # print(len(train_indices), len(eval_indices), len(test_indices))
 
     # traverse training data, only keeping the users with positive ratings
     user_history_dict = dict()
-    for i in train_indices:
+    for i in range(rating_np.shape[0]):
         user = rating_np[i][0]
         item = rating_np[i][1]
         rating = rating_np[i][2]
@@ -50,20 +60,26 @@ def dataset_split(rating_np):
                 user_history_dict[user] = []
             user_history_dict[user].append(item)
 
-    train_indices = [i for i in train_indices if rating_np[i][0] in user_history_dict]
-    eval_indices = [i for i in eval_indices if rating_np[i][0] in user_history_dict]
-    test_indices = [i for i in test_indices if rating_np[i][0] in user_history_dict]
-    # print(len(train_indices), len(eval_indices), len(test_indices))
+    train_indices = [i for i in range(rating_np.shape[0]) if rating_np[i][0] in user_history_dict]
+    # eval_indices = [i for i in eval_indices if rating_np[i][0] in user_history_dict]
+    # test_indices = [i for i in test_indices if rating_np[i][0] in user_history_dict]
+    # # print(len(train_indices), len(eval_indices), len(test_indices))
 
     train_data = rating_np[train_indices]
-    eval_data = rating_np[eval_indices]
-    test_data = rating_np[test_indices]
+    # eval_data = rating_np[eval_indices]
+    # test_data = rating_np[test_indices]
+
+    eval_data = None
+
+    print('Loading test data...')
+    test_indices = [i for i in range(test_np.shape[0]) if test_np[i][0] in user_history_dict]
+    test_data = test_np[test_indices]
 
     return train_data, eval_data, test_data, user_history_dict
 
 
 def load_kg(args):
-    print('reading KG file ...')
+    print('Reading KG file...')
 
     # reading kg file
     kg_file = '../data/' + args.dataset + '/kg_final'
@@ -82,7 +98,7 @@ def load_kg(args):
 
 
 def construct_kg(kg_np):
-    print('constructing knowledge graph ...')
+    print('Constructing knowledge graph...')
     kg = dict()
     for triple in kg_np:
         head = triple[0]
@@ -95,7 +111,7 @@ def construct_kg(kg_np):
 
 
 def get_ripple_set(args, kg, user_history_dict):
-    print('constructing ripple set ...')
+    print('Constructing ripple set...')
 
     # user -> [[hop_0_heads, hop_0_relations, hop_0_tails], [hop_1_heads, hop_1_relations, hop_1_tails], ...]
     ripple_set = dict()
@@ -134,5 +150,4 @@ def get_ripple_set(args, kg, user_history_dict):
                 memories_r = [memories_r[i] for i in indices]
                 memories_t = [memories_t[i] for i in indices]
                 ripple_set[user].append([memories_h, memories_r, memories_t])
-        print(user, len(ripple_set[user]), end='\r')
     return ripple_set

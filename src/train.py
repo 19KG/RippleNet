@@ -28,15 +28,23 @@ def train(args, data_info, show_loss):
 
             # evaluation
             train_auc, train_acc = evaluation(sess, args, model, train_data, ripple_set, args.batch_size)
-            eval_auc, eval_acc = evaluation(sess, args, model, eval_data, ripple_set, args.batch_size)
-            test_auc, test_acc = evaluation(sess, args, model, test_data, ripple_set, args.batch_size)
+            # eval_auc, eval_acc = evaluation(sess, args, model, eval_data, ripple_set, args.batch_size)
+            # test_auc, test_acc = evaluation(sess, args, model, test_data, ripple_set, args.batch_size)
 
-            print('epoch %d    train auc: %.4f  acc: %.4f    eval auc: %.4f  acc: %.4f    test auc: %.4f  acc: %.4f'
-                  % (step, train_auc, train_acc, eval_auc, eval_acc, test_auc, test_acc))
+            # print('epoch %d    train auc: %.4f  acc: %.4f    eval auc: %.4f  acc: %.4f    test auc: %.4f  acc: %.4f'
+            #       % (step, train_auc, train_acc, eval_auc, eval_acc, test_auc, test_acc))
+            print('epoch %d    train auc: %.4f  acc: %.4f' % (step, train_auc, train_acc))
+
+        # test
+        user_list, item_list, score_list = test(sess, args, model, test_data, ripple_set, args.batch_size)
+        persistence(user_list, item_list, score_list, args.dataset)
+
+    return model
 
 
 def get_feed_dict(args, model, data, ripple_set, start, end):
     feed_dict = dict()
+    feed_dict[model.users] = data[start:end, 0]
     feed_dict[model.items] = data[start:end, 1]
     feed_dict[model.labels] = data[start:end, 2]
     for i in range(args.n_hop):
@@ -56,3 +64,29 @@ def evaluation(sess, args, model, data, ripple_set, batch_size):
         acc_list.append(acc)
         start += batch_size
     return float(np.mean(auc_list)), float(np.mean(acc_list))
+
+
+def test(sess, args, model, data, ripple_set, batch_size):
+    start = 0
+    user_list = []
+    item_list = []
+    score_list = []
+    while start < data.shape[0]:
+        users, items, scores = model.test(sess, get_feed_dict(args, model, data, ripple_set, start, start + batch_size))
+        for user in users:
+            user_list.append(user)
+        for item in items:
+            item_list.append(item)
+        for score in scores:
+            score_list.append(score)
+        start += batch_size
+    return user_list, item_list, score_list
+
+
+def persistence(user_list, item_list, score_list, dataset):
+    if len(user_list) != len(item_list) or len(score_list) != len(user_list):
+        print('Error: length not equal')
+    else:
+        with open('../data/' + dataset + '/result.txt', 'w', encoding='utf-8') as f:
+            for idx in range(0, len(user_list)):
+                f.write(str(user_list[idx]) + '\t' + str(item_list[idx]) + '\t' + str(score_list[idx]) + '\n')
